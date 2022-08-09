@@ -15,7 +15,17 @@ pub fn main() {
         .unwrap();
  
     let mut canvas = window.into_canvas().build().unwrap();
- 
+
+    // testing font stuff
+    let texture_creator = canvas.texture_creator();
+    let ttf = sdl2::ttf::init().unwrap();
+    let font = ttf.load_font("C:\\Windows\\fonts\\Arial.ttf", 24).unwrap();
+    let fsurf = font.render("something").blended(Color::RGBA(255, 0, 0, 255)).unwrap();
+    let ftext = texture_creator
+                    .create_texture_from_surface(fsurf)
+                    .unwrap();
+
+    //back to regular scheduled programming                
     canvas.set_draw_color(Color::RGB(0, 180, 255));
     canvas.clear();
     canvas.present();
