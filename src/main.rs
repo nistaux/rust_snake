@@ -24,7 +24,7 @@ pub fn main() {
     let event_pump = sdl_context.event_pump().unwrap();
 
     
-    let mut engine = Engine::new(width, height, scale.try_into().unwrap(), unit.try_into().unwrap(), 3, canvas, event_pump);
+    let mut engine = Engine::new(width, height, unit.try_into().unwrap(), 3, canvas, event_pump);
     
     while engine.running {
         

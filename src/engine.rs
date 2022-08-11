@@ -25,7 +25,7 @@ pub struct Engine {
 }
 
 impl Engine {
-    pub fn new(width: usize, height: usize, scale: u8, unit: u8, gamespeed: u8, canvas: Canvas<Window>, event_pump: EventPump) -> Engine {
+    pub fn new(width: usize, height: usize, unit: u8, gamespeed: u8, canvas: Canvas<Window>, event_pump: EventPump) -> Engine {
         Engine {
             width,
             height,
@@ -37,7 +37,7 @@ impl Engine {
             event_pump,
         }
     }
-    
+
     pub fn get_events(&mut self) -> Vec<Option<GameEventCode>> {
         let mut events: Vec<Option<GameEventCode>> = vec![];
         for event in self.event_pump.poll_iter() {
