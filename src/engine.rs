@@ -6,7 +6,8 @@ use sdl2::video::Window;
 use sdl2::EventPump;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::rect::Point;
+use sdl2::rect::{Point, Rect};
+use sdl2::image::LoadTexture;
 
 use crate::snake::Snake;
 
@@ -69,6 +70,16 @@ impl Engine {
             let end: Point = Point::new(self.width.try_into().unwrap(), (i*unit).try_into().unwrap());
             self.canvas.draw_line(start, end).unwrap();
         }
+
+        let head = self.snake.body.first().unwrap();
+        let (tail, body) = self.snake.body.split_last().unwrap();
+        let texture_creator = self.canvas.texture_creator();
+        let texture = texture_creator.load_texture(".\\imgs\\snake_map.png").unwrap();
+
+        self.canvas.copy(
+                    &texture, 
+                    Rect::new(0, 0, 15, 15), 
+                    Rect::new(head.x(), head.y(), 15, 15)).unwrap();
 
         self.canvas.present();
     }
