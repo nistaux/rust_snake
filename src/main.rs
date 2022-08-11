@@ -1,10 +1,12 @@
+//#![windows_subsystem = "windows"]
 extern crate sdl2; 
 mod snake;
 mod engine;
 
 use engine::GameEventCode;
 use engine::Engine;
- 
+
+
 pub fn main() {
 
     let scale: usize = 5;
