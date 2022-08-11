@@ -3,9 +3,10 @@ use std::time::Duration;
 use sdl2::pixels::Color;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
-use sdl2::{EventPump};
+use sdl2::EventPump;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::rect::Point;
 
 use crate::snake::Snake;
 
@@ -53,6 +54,22 @@ impl Engine {
     pub fn draw(&mut self) {
         self.canvas.set_draw_color(Color::RGB(0, 180, 255));
         self.canvas.clear();
+
+        self.canvas.set_draw_color(Color::RGB(50, 50, 50));
+        for i in (1..(self.width/(self.unit as usize))){
+            let unit: usize = self.unit.try_into().unwrap();
+            let start: Point = Point::new((i*unit).try_into().unwrap(), 0);
+            let end: Point = Point::new((i*unit).try_into().unwrap(), self.height.try_into().unwrap());
+            self.canvas.draw_line(start, end).unwrap();
+        }
+
+        for i in (1..(self.height/(self.unit as usize))){
+            let unit: usize = self.unit.try_into().unwrap();
+            let start: Point = Point::new(0, (i*unit).try_into().unwrap());
+            let end: Point = Point::new(self.width.try_into().unwrap(), (i*unit).try_into().unwrap());
+            self.canvas.draw_line(start, end).unwrap();
+        }
+
         self.canvas.present();
     }
 
