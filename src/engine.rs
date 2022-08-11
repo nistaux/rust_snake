@@ -56,6 +56,7 @@ impl Engine {
         self.canvas.set_draw_color(Color::RGB(0, 180, 255));
         self.canvas.clear();
 
+        // Creating grid just to help for now
         self.canvas.set_draw_color(Color::RGB(50, 50, 50));
         for i in (1..(self.width/(self.unit as usize))){
             let unit: usize = self.unit.try_into().unwrap();
@@ -63,7 +64,6 @@ impl Engine {
             let end: Point = Point::new((i*unit).try_into().unwrap(), self.height.try_into().unwrap());
             self.canvas.draw_line(start, end).unwrap();
         }
-
         for i in (1..(self.height/(self.unit as usize))){
             let unit: usize = self.unit.try_into().unwrap();
             let start: Point = Point::new(0, (i*unit).try_into().unwrap());
@@ -71,15 +71,22 @@ impl Engine {
             self.canvas.draw_line(start, end).unwrap();
         }
 
+        // Drawing snek
         let head = self.snake.body.first().unwrap();
+        let head_rect = Rect::new(0, 0, 15, 15);
+        let tail_rect = Rect::new(30, 0, 15, 15);
         let (tail, body) = self.snake.body.split_last().unwrap();
         let texture_creator = self.canvas.texture_creator();
         let texture = texture_creator.load_texture(".\\imgs\\snake_map.png").unwrap();
 
         self.canvas.copy(
                     &texture, 
-                    Rect::new(0, 0, 15, 15), 
+                    head_rect, 
                     Rect::new(head.x(), head.y(), 15, 15)).unwrap();
+        self.canvas.copy(
+                    &texture, 
+                    tail_rect, 
+                    Rect::new(tail.x(), tail.y(), 15, 15)).unwrap();
 
         self.canvas.present();
     }
