@@ -3,44 +3,39 @@ mod snake;
 mod engine;
 
 use engine::GameEventCode;
-use sdl2::pixels::Color;
-use snake::SnakeGame;
+use engine::Engine;
  
 pub fn main() {
-    // Create SnakeGame instance
-    let mut snakegame = SnakeGame::new(800, 600, 6);
+
+    let scale: usize = 5;
+    let unit: usize = 15;
+    let width = (scale * 240) as usize;
+    let height = (scale * 135) as usize;
+    let title = "Rust the Snake";
 
     // Setup SDL2 Stuffs
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
-    let window = video_subsystem.window("Rust, the Snake", snakegame.width.try_into().unwrap(), snakegame.height.try_into().unwrap())
+    let window = video_subsystem.window(title, width.try_into().unwrap(), height.try_into().unwrap())
         .position_centered()
         .build()
         .unwrap();
-    let mut canvas = window.into_canvas().build().unwrap();
+    let canvas = window.into_canvas().build().unwrap();
+    let event_pump = sdl_context.event_pump().unwrap();
 
-    // Setting default background color for now          
-    canvas.set_draw_color(Color::RGB(0, 180, 255));
-    canvas.clear();
-    canvas.present();
-
-    // Setting up event management
-    let mut event_pump = sdl_context.event_pump().unwrap();
-
-    // Game Loop - Not sure how I want to do this
-    while snakegame.running {
+    
+    let mut engine = Engine::new(width, height, scale.try_into().unwrap(), unit.try_into().unwrap(), 3, canvas, event_pump);
+    
+    while engine.running {
         
-        // todo: make Engine struct and run everything from in it
-        // instead of snakegame.running above, it could be engine.running
-        // this should make all of this more simple
+        engine.draw();
+        engine.tick();
 
-        engine::tick();
-
-        for event in engine::check_events(&mut event_pump){
+        for event in engine.get_events(){
             match event {
                 Some(GameEventCode::Quit) => {
                     println!("Game Quiting");
-                    snakegame.stop();
+                    engine.stop();
                 },
                 None => {
                     //println!("Non quit event happening");

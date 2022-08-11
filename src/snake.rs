@@ -1,34 +1,29 @@
 use rand::Rng;
 use sdl2::rect::Point;
 
-pub struct SnakeGame {
-    pub width: i32,
-    pub height: i32,
-    gamespeed: u8,
-    pub running: bool,
-    food_loc: Point,
+pub struct Snake {
+    direction: Direction,
+    body: Vec<Point>,
+    food: Point,
 }
 
-impl SnakeGame {
-    pub fn new(width: i32, height: i32, gamespeed: u8) -> SnakeGame {
-        SnakeGame {width, height, gamespeed, running: true, food_loc: Point::new(width - (width/4), height - (height/2))}
-    }
+enum Direction { Up, Down, Left, Right }
 
-    pub fn _change_gamespeed(&mut self, updated_gamespeed: u8) {
-        if(!self.running){
-            self.gamespeed = updated_gamespeed;
-        }
+
+impl Snake {
+    pub fn new(unit: i32) -> Snake {
+        let (head, tail) = (
+            Point::new((unit*(10*16)), (unit*(10*9))),
+            Point::new((unit*(11*16)), (unit*(10*9)))
+        );
+        Snake {direction: Direction::Left, body: vec![head, tail], food: Point::new((unit*(5*16)), (unit*(10*9)))}
     }
 
     pub fn _new_food(&mut self) {
         let mut rng = rand::thread_rng();
-        let (x, y): (i32, i32) = (rng.gen_range(1..self.width), rng.gen_range(1..self.height));
-        self.food_loc = Point::new(x, y);
+        let (x, y): (i32, i32) = (rng.gen_range(1..1200), rng.gen_range(1..675));
+        self.food = Point::new(x, y);
         
-    }
-
-    pub fn stop(&mut self) {
-        self.running = false;
     }
 }
 
