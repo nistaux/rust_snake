@@ -3,14 +3,13 @@ extern crate sdl2;
 mod snake;
 mod engine;
 
-use engine::GameEventCode;
 use engine::Engine;
-
 
 pub fn main() {
 
     let scale: usize = 5;
     let unit: usize = 15;
+    let gamespeed: f64 = 10.00;
     let width = (scale * 240) as usize;
     let height = (scale * 135) as usize;
     let title = "Rust the Snake";
@@ -26,10 +25,11 @@ pub fn main() {
     let event_pump = sdl_context.event_pump().unwrap();
 
     
-    let mut engine = Engine::new(width, height, unit.try_into().unwrap(), 3, canvas, event_pump);
+    let mut engine = Engine::new(width, height, unit.try_into().unwrap(), gamespeed, canvas, event_pump);
     
-    while engine.running {
-        
+    engine.start();
+    /*while engine.running {
+        println!("test");
         engine.draw();
         engine.tick();
 
@@ -44,5 +44,5 @@ pub fn main() {
                 }
             }
         }
-    }
+    }*/
 }
