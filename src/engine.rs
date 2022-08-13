@@ -201,7 +201,7 @@ impl Engine {
                     self.canvas.copy_ex(
                         &snake_texture, 
                         tail_rect, 
-                        Rect::new(head.x(), head.y(), 15, 15), 
+                        Rect::new(tail.x(), tail.y()+i32::from(self.unit), 15, 15), 
                         -90.00, 
                         Point::new(0, 0),
                         false,

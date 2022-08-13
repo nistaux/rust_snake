@@ -1,4 +1,4 @@
-//#![windows_subsystem = "windows"]
+#![windows_subsystem = "windows"]
 extern crate sdl2; 
 mod snake;
 mod engine;
@@ -28,21 +28,4 @@ pub fn main() {
     let mut engine = Engine::new(width, height, unit.try_into().unwrap(), gamespeed, canvas, event_pump);
     
     engine.start();
-    /*while engine.running {
-        println!("test");
-        engine.draw();
-        engine.tick();
-
-        for event in engine.get_events(){
-            match event {
-                Some(GameEventCode::Quit) => {
-                    println!("Game Quiting");
-                    engine.stop();
-                },
-                None => {
-                    //println!("Non quit event happening");
-                }
-            }
-        }
-    }*/
 }
