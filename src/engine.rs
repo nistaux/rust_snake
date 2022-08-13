@@ -1,4 +1,3 @@
-use std::ops::Div;
 //extern crate sdl2;
 use std::time::Duration;
 use sdl2::pixels::Color;
@@ -96,8 +95,7 @@ impl Engine {
         // map cutouts of the parts
         let head_rect = Rect::new(0, 0, 15, 15);
         let tail_rect = Rect::new(30, 0, 15, 15);
-        let body_rect = Rect::new(15, 0, 15, 15);
-        let map = Rect::new(0, 0, (self.width as u32), (self.height as u32));
+        let map = Rect::new(0, 0, self.width as u32, self.height as u32);
 
         // Getting head and tail first
         let tail = self.snake.body.first().unwrap();
@@ -108,13 +106,13 @@ impl Engine {
 
         // Creating grid just to help for now
         self.canvas.set_draw_color(Color::RGB(150, 150, 90));
-        for i in (1..(self.width/(self.unit as usize))){
+        for i in 1..(self.width/(self.unit as usize)){
             let unit: usize = self.unit.try_into().unwrap();
             let start: Point = Point::new((i*unit).try_into().unwrap(), 0);
             let end: Point = Point::new((i*unit).try_into().unwrap(), self.height.try_into().unwrap());
             self.canvas.draw_line(start, end).unwrap();
         }
-        for i in (1..(self.height/(self.unit as usize))){
+        for i in 1..(self.height/(self.unit as usize)){
             let unit: usize = self.unit.try_into().unwrap();
             let start: Point = Point::new(0, (i*unit).try_into().unwrap());
             let end: Point = Point::new(self.width.try_into().unwrap(), (i*unit).try_into().unwrap());
@@ -309,7 +307,7 @@ impl Engine {
         self.running = false;
     }
 
-    pub fn start_game() {
+    pub fn _start_game() {
         todo!()
     }
 

@@ -1,7 +1,5 @@
 use rand::Rng;
 use sdl2::rect::Point;
-use std::collections::HashMap;
-
 
 pub struct Snake {
     pub direction: Direction,
@@ -141,7 +139,7 @@ pub enum PartType {
 }
 
 pub enum GameState {
-    MainMenu,
+    _MainMenu,
     EndGame,
-    Snake,
+    _Snake,
 }
