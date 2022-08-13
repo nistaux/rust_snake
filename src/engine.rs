@@ -316,9 +316,9 @@ impl Engine {
         let map_texture = texture_creator.load_texture(".\\imgs\\floor.png").unwrap();
         let snake_texture = texture_creator.load_texture(".\\imgs\\snake_map.png").unwrap();
         while self.running {
-            
-            self.draw(&snake_texture, &map_texture);
             self.tick();
+            self.draw(&snake_texture, &map_texture);
+            
 
             for event in self.get_events(){
                 match event {
