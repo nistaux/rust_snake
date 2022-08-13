@@ -1,7 +1,8 @@
 //extern crate sdl2;
 use std::time::Duration;
 use sdl2::pixels::Color;
-use sdl2::render::{Canvas, Texture};
+use sdl2::render::{Canvas, Texture, TextureQuery};
+use sdl2::surface::Surface;
 use sdl2::video::Window;
 use sdl2::EventPump;
 use sdl2::event::Event;
@@ -18,6 +19,7 @@ pub struct Engine {
     pub running: bool,
     pub unit: u8,
     pub gamespeed: f64,
+    bounds: (Point, Point),
     snake: Snake,
 
     // SDL Things
@@ -26,14 +28,15 @@ pub struct Engine {
 }
 
 impl Engine {
-    pub fn new(width: usize, height: usize, unit: u8, gamespeed: f64, canvas: Canvas<Window>, event_pump: EventPump) -> Engine {
+    pub fn new(width: usize, height: usize, unit: u8, gamespeed: f64, bounds: (Point, Point), canvas: Canvas<Window>, event_pump: EventPump) -> Engine {
         Engine {
             width,
             height,
             running: true,
             unit,
             gamespeed,
-            snake: Snake::new(unit.try_into().unwrap(), width.try_into().unwrap(), height.try_into().unwrap()),
+            bounds,
+            snake: Snake::new(unit.try_into().unwrap(), bounds),
             canvas,
             event_pump,
         }
@@ -86,7 +89,7 @@ impl Engine {
         events
     }
 
-    pub fn draw(&mut self, snake_texture: &Texture, map_texture: &Texture) {
+    pub fn draw_art(&mut self, snake_texture: &Texture, map_texture: &Texture) {
         // Setting default background color
         self.canvas.set_draw_color(Color::RGB(212, 206, 125));
         //clearing the canvas
@@ -95,7 +98,7 @@ impl Engine {
         // map cutouts of the parts
         let head_rect = Rect::new(0, 0, 15, 15);
         let tail_rect = Rect::new(30, 0, 15, 15);
-        let map = Rect::new(0, 0, self.width as u32, self.height as u32);
+        let map = Rect::new(0, 200, self.width as u32, self.height as u32);
 
         // Getting head and tail first
         let tail = self.snake.body.first().unwrap();
@@ -103,23 +106,25 @@ impl Engine {
 
         // Setting background
         self.canvas.copy(&map_texture, map, None).unwrap();
-
+        let (tlbound, brbound) = self.bounds;
         // Creating grid just to help for now
-        self.canvas.set_draw_color(Color::RGB(150, 150, 90));
-        for i in 1..(self.width/(self.unit as usize)){
+        self.canvas.set_draw_color(Color::RGB(43, 84, 25));
+        for i in tlbound.x/(self.unit as i32)..(brbound.x/(self.unit as i32)){
             let unit: usize = self.unit.try_into().unwrap();
-            let start: Point = Point::new((i*unit).try_into().unwrap(), 0);
-            let end: Point = Point::new((i*unit).try_into().unwrap(), self.height.try_into().unwrap());
+            let start: Point = Point::new((i*unit as i32).try_into().unwrap(), tlbound.y);
+            let end: Point = Point::new((i*unit as i32).try_into().unwrap(), brbound.y);
             self.canvas.draw_line(start, end).unwrap();
         }
-        for i in 1..(self.height/(self.unit as usize)){
+        for i in tlbound.y/self.unit as i32..(brbound.y/(self.unit as i32)){
             let unit: usize = self.unit.try_into().unwrap();
-            let start: Point = Point::new(0, (i*unit).try_into().unwrap());
-            let end: Point = Point::new(self.width.try_into().unwrap(), (i*unit).try_into().unwrap());
+            let start: Point = Point::new(tlbound.x, (i*unit as i32).try_into().unwrap());
+            let end: Point = Point::new(brbound.x, (i*unit as i32).try_into().unwrap());
             self.canvas.draw_line(start, end).unwrap();
         }
         self.canvas.set_draw_color(Color::RGB(255, 50, 50));
         self.canvas.fill_rect(Rect::new(self.snake.food.x(), self.snake.food.y(), u32::from(self.unit), u32::from(self.unit))).unwrap();
+        self.canvas.set_draw_color(Color::RGB(177, 199, 36));
+        self.canvas.draw_rect(Rect::new(tlbound.x, tlbound.y, (brbound.x - tlbound.x) as u32, (brbound.y-tlbound.y) as u32)).unwrap();
 
         // loop through body and render that
         let mut i: usize = 0;
@@ -273,8 +278,9 @@ impl Engine {
             },
         }
 
+        //self.canvas.te
         // Finally presenting the canvas after all
-        self.canvas.present();
+        
     }
 
     pub fn tick(&mut self) {
@@ -283,7 +289,7 @@ impl Engine {
         std::thread::sleep(Duration::from_secs_f64(tickrate));
 
         // moving snek if not hitting bounds
-        match self.snake.slither(i32::from(self.unit,), self.width, self.height) {
+        match self.snake.slither(i32::from(self.unit,), self.bounds) {
             Some(GameState::EndGame) => {
                 //self.stop()
                 match self.snake.direction {
@@ -297,8 +303,8 @@ impl Engine {
         }
         let head = self.snake.body.last().unwrap().to_owned();
         if (head.x(), head.y()) == (self.snake.food.x(), self.snake.food.y()) {
-            self.snake.eat(i32::from(self.unit), self.width as i32, self.height as i32);
-            self.gamespeed = self.gamespeed + 0.40;
+            self.snake.eat(i32::from(self.unit), self.bounds);
+            self.gamespeed = self.gamespeed + 0.5;
             println!("Tickrate: {} - Gamespeed: {}", tickrate, self.gamespeed);
         }
     }
@@ -312,14 +318,36 @@ impl Engine {
     }
 
     pub fn start(&mut self){
+        // Setting up textures
         let texture_creator = self.canvas.texture_creator();
         let map_texture = texture_creator.load_texture(".\\imgs\\floor.png").unwrap();
-        let snake_texture = texture_creator.load_texture(".\\imgs\\snake_map.png").unwrap();
+        let snake_texture = texture_creator.load_texture(".\\imgs\\snake_map_green.png").unwrap();
+
+        // Setting up fonts
+        let ttf_context = sdl2::ttf::init().unwrap();
+        let mut title_font = ttf_context.load_font(".\\fonts\\lucon.ttf", 50).unwrap();
+        title_font.set_style(sdl2::ttf::FontStyle::BOLD);
+        let mut ui_font = ttf_context.load_font(".\\fonts\\lucon.ttf", 27).unwrap();
+        ui_font.set_style(sdl2::ttf::FontStyle::BOLD);
+        let mut surface: Surface;
+        let mut dst: Rect;
+
         while self.running {
             self.tick();
-            self.draw(&snake_texture, &map_texture);
-            
+            self.draw_art(&snake_texture, &map_texture);
 
+            // Create Gamespeed UI at top left
+            self.canvas.set_draw_color(Color::RGB(50, 105, 50));
+            self.canvas.fill_rect(Rect::new(15,self.height as i32-100,self.width as u32-30,90)).unwrap();
+            let mut str = String::from("Game Speed: ");
+            str.push_str(&(self.gamespeed*10.0).to_string());
+            surface = ui_font.render(&str).blended(Color::RGBA(150, 210, 150, 255)).unwrap();
+            let gamespeed_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+            let TextureQuery {width, height, ..} = gamespeed_text.query();
+            dst = Rect::new(390,self.height as i32-67, width, height);
+            self.canvas.copy(&gamespeed_text, None, dst).unwrap();
+
+            self.canvas.present();
             for event in self.get_events(){
                 match event {
                     Some(GameEventCode::Quit) => {

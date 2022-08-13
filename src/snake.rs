@@ -12,28 +12,31 @@ pub enum Direction { Up, Down, Left, Right }
 
 
 impl Snake {
-    pub fn new(unit: i32, width: i32, height: i32) -> Snake {
+    pub fn new(unit: i32, bounds: (Point, Point)) -> Snake {
         let (tail, body, head) = (
-            Point::new(unit*70, unit*21),
-            Point::new(unit*71, unit*21),
-            Point::new(unit*72, unit*21),
+            Point::new(unit*39, unit*28),
+            Point::new(unit*40, unit*28),
+            Point::new(unit*41, unit*28),
         );
-        Snake {direction: Direction::Left, body: vec![head, body, tail], food: Snake::new_food(unit, width, height)}
+        Snake {direction: Direction::Left, body: vec![head, body, tail], food: Snake::new_food(unit, bounds)}
     }
 
-    pub fn new_food(unit: i32, width: i32, height: i32) -> Point {
+    pub fn new_food(unit: i32, bounds: (Point, Point)) -> Point {
         let mut rng = rand::thread_rng();
-        let (x, y): (i32, i32) = (rng.gen_range(1..(width/unit)), rng.gen_range(1..height/unit));
+        let (tlbound, brbound) = bounds; 
+        let (x, y): (i32, i32) = (rng.gen_range((tlbound.x/unit)..(brbound.x/unit)), rng.gen_range((tlbound.y/unit)..brbound.y/unit));
         Point::new(x*unit, y*unit)
         
     }
     
-    pub fn slither(&mut self, unit: i32, width: usize, height: usize) -> Option<GameState> {
+    pub fn slither(&mut self, unit: i32, bounds: (Point, Point)) -> Option<GameState> {
+        let (_, body) = self.body.split_first().unwrap();
+        let point = self.body.last().unwrap().to_owned();
+
+        let (tlbound, brbound) = bounds;
         match self.direction {
             Direction::Up => {
-                let (_, body) = self.body.split_first().unwrap();
-                let point = self.body.last().unwrap().to_owned();
-                if point.y() <= 0 {
+                if point.y() <=  tlbound.y{
                     Some(GameState::EndGame)
                 }else{
                     self.body = body.to_owned();
@@ -42,9 +45,7 @@ impl Snake {
                 }
             },
             Direction::Down => {
-                let (_, body) = self.body.split_first().unwrap();
-                let point = self.body.last().unwrap().to_owned();
-                let boundary = (height as i32) - unit;
+                let boundary = brbound.y - unit;
                 if point.y() >= boundary {
                     Some(GameState::EndGame)
                 }else{
@@ -54,9 +55,7 @@ impl Snake {
                 }
             },
             Direction::Left => {
-                let (_, body) = self.body.split_first().unwrap();
-                let point = self.body.last().unwrap().to_owned();
-                if point.x() <= 0 {
+                if point.x() <= tlbound.x {
                     Some(GameState::EndGame)
                 }else{
                     self.body = body.to_owned();
@@ -65,9 +64,7 @@ impl Snake {
                 }
             },
             Direction::Right => {
-                let (_, body) = self.body.split_first().unwrap();
-                let point = self.body.last().unwrap().to_owned();
-                let boundary = (width as i32) - unit;
+                let boundary = brbound.x - unit;
                 if point.x() >= boundary {
                     Some(GameState::EndGame)
                 }else{
@@ -115,8 +112,8 @@ impl Snake {
         
     }
 
-    pub fn eat(&mut self, unit: i32, width: i32, height: i32) {
-        self.food = Snake::new_food(unit, width, height);
+    pub fn eat(&mut self, unit: i32, bounds: (Point, Point)) {
+        self.food = Snake::new_food(unit, bounds);
         let current_tail = self.body.first().unwrap().to_owned();
         let mut new_body = vec![Point::new(current_tail.x()+unit, current_tail.y())];
         for part in &self.body {
