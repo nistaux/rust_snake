@@ -13,11 +13,12 @@ pub enum Direction { Up, Down, Left, Right }
 
 impl Snake {
     pub fn new(unit: i32, width: i32, height: i32) -> Snake {
-        let (tail, head) = (
+        let (tail, body, head) = (
             Point::new(unit*70, unit*21),
-            Point::new(unit*71, unit*21)
+            Point::new(unit*71, unit*21),
+            Point::new(unit*72, unit*21),
         );
-        Snake {direction: Direction::Left, body: vec![head, tail], food: Snake::new_food(unit, width, height)}
+        Snake {direction: Direction::Left, body: vec![head, body, tail], food: Snake::new_food(unit, width, height)}
     }
 
     pub fn new_food(unit: i32, width: i32, height: i32) -> Point {
