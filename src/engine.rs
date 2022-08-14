@@ -340,6 +340,8 @@ impl Engine {
         title_font.set_style(sdl2::ttf::FontStyle::BOLD);
         let mut ui_font = ttf_context.load_font(".\\fonts\\lucon.ttf", 27).unwrap();
         ui_font.set_style(sdl2::ttf::FontStyle::BOLD);
+        let mut option_font = ttf_context.load_font(".\\fonts\\lucon.ttf", 27).unwrap();
+        option_font.set_style(sdl2::ttf::FontStyle::BOLD);
         let mut surface: Surface;
         let mut dst: Rect;
 
@@ -348,6 +350,35 @@ impl Engine {
 
             self.canvas.copy(&mainmenu_texture, map, None).unwrap();
 
+            //16, 65, 179
+            // Create Title Text
+            let str = String::from("Rust the Snake");
+            surface = title_font.render(&str).blended(Color::RGBA(150, 96, 36, 255)).unwrap();
+            let title_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+            let TextureQuery {width, height, ..} = title_text.query();
+            dst = Rect::new(140,110, width, height);
+            self.canvas.copy(&title_text, None, dst).unwrap();
+
+            // Create Title Text
+            let str = String::from("by Nistaux");
+            surface = option_font.render(&str).blended(Color::RGBA(0, 138, 117, 255)).unwrap();
+            let author_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+            let TextureQuery {width, height, ..} = author_text.query();
+            dst = Rect::new(450,165, width, height);
+            self.canvas.copy(&author_text, None, dst).unwrap();
+
+            // Creating box for text to go in
+            self.canvas.set_draw_color(Color::RGB(230, 230, 230));
+            self.canvas.fill_rect(Rect::new(180,395,357,38)).unwrap();
+
+            // Create start game text (press enter to start)
+            let str = String::from("Press Enter to start!");
+            surface = option_font.render(&str).blended(Color::RGBA(16, 100, 179, 255)).unwrap();
+            let option_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+            let TextureQuery {width, height, ..} = option_text.query();
+            dst = Rect::new(190,400, width, height);
+            self.canvas.copy(&option_text, None, dst).unwrap();
+
             for event in self.get_events(){
                 match event {
                     Some(GameEventCode::Quit) => {
@@ -355,7 +386,6 @@ impl Engine {
                         self.stop();
                     },
                     Some(GameEventCode::StartGame) => {},
-                    Some(GameEventCode::MainMenu) => {},
                     None => {
                         //println!("Non quit event happening");
                     }
@@ -376,7 +406,6 @@ impl Engine {
                         self.stop();
                     },
                     Some(GameEventCode::StartGame) => {},
-                    Some(GameEventCode::MainMenu) => {},
                     None => {
                         //println!("Non quit event happening");
                     }
@@ -391,6 +420,22 @@ impl Engine {
             // Creating box for text to go in
             self.canvas.set_draw_color(Color::RGB(50, 105, 50));
             self.canvas.fill_rect(Rect::new(15,self.height as i32-100,self.width as u32-30,90)).unwrap();
+
+            // Create Title Text
+            let str = String::from("Rust the Snake");
+            surface = title_font.render(&str).blended(Color::RGBA(150, 96, 36, 255)).unwrap();
+            let title_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+            let TextureQuery {width, height, ..} = title_text.query();
+            dst = Rect::new(140,30, width, height);
+            self.canvas.copy(&title_text, None, dst).unwrap();
+
+            // Create Title Text
+            let str = String::from("by Nistaux");
+            surface = option_font.render(&str).blended(Color::RGBA(0, 138, 117, 255)).unwrap();
+            let author_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+            let TextureQuery {width, height, ..} = author_text.query();
+            dst = Rect::new(450,75, width, height);
+            self.canvas.copy(&author_text, None, dst).unwrap();
 
             // Create Gamespeed UI
             let mut str = String::from("Game Speed: ");
@@ -420,10 +465,8 @@ pub enum GameState {
     MainMenu,
     Game,
     GameOver,
-    Options,
 }
 pub enum GameEventCode {
     StartGame,
-    MainMenu,
     Quit,
 }
