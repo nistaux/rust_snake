@@ -10,7 +10,7 @@ use sdl2::keyboard::Keycode;
 use sdl2::rect::{Point, Rect};
 use sdl2::image::LoadTexture;
 
-use crate::snake::{Snake, GameState, Direction, PartType};
+use crate::snake::{Snake, Direction, PartType};
 
 pub struct Engine {
     // Self Made Things
@@ -21,6 +21,7 @@ pub struct Engine {
     pub gamespeed: f64,
     bounds: (Point, Point),
     snake: Snake,
+    state: GameState,
 
     // SDL Things
     canvas: Canvas<Window>,
@@ -37,6 +38,7 @@ impl Engine {
             gamespeed,
             bounds,
             snake: Snake::new(unit.try_into().unwrap(), bounds),
+            state: GameState::MainMenu,
             canvas,
             event_pump,
         }
@@ -52,28 +54,28 @@ impl Engine {
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => events.push(Some(GameEventCode::Quit)),
                 // presses W
                 Event::KeyDown { keycode: Some(Keycode::W), .. } => {
-                    if self.snake.direction != Direction::Down{
+                    if self.snake.get_head_direction() != Direction::Down{
                         self.snake.direction = Direction::Up;
                     }
                     events.push(None);
                 },
                 // presses A
                 Event::KeyDown { keycode: Some(Keycode::A), .. } => {
-                    if self.snake.direction != Direction::Right {
+                    if self.snake.get_head_direction() != Direction::Right {
                         self.snake.direction = Direction::Left;
                     }
                     events.push(None);
                 },
                 // presses S
                 Event::KeyDown { keycode: Some(Keycode::S), .. } => {
-                    if self.snake.direction != Direction::Up {
+                    if self.snake.get_head_direction() != Direction::Up {
                         self.snake.direction = Direction::Down;
                     }
                     events.push(None);
                 },
                 // presses D
                 Event::KeyDown { keycode: Some(Keycode::D), .. } => {
-                    if self.snake.direction != Direction::Left {
+                    if self.snake.get_head_direction() != Direction::Left {
                         self.snake.direction = Direction::Right;
                     }
                     events.push(None);
@@ -83,7 +85,18 @@ impl Engine {
                     self.gamespeed = self.gamespeed + 20.0;
                     events.push(None);
                 },
+                // presses Enter
+                Event::KeyDown { keycode: Some(Keycode::Return), .. } => {
+                    if self.state == GameState::MainMenu{
+                        self.state = GameState::Game;
+                        events.push(Some(GameEventCode::StartGame))
+                    }else {
+                        events.push(None);
+                    }
+                    
+                },
                 _ => events.push(None)
+                
             }
         }
         events
@@ -290,7 +303,7 @@ impl Engine {
 
         // moving snek if not hitting bounds
         match self.snake.slither(i32::from(self.unit,), self.bounds) {
-            Some(GameState::EndGame) => {
+            Some(GameState::GameOver) => {
                 //self.stop()
                 match self.snake.direction {
                     Direction::Up => println!("Hitting Top Edge!"),
@@ -304,7 +317,7 @@ impl Engine {
         let head = self.snake.body.last().unwrap().to_owned();
         if (head.x(), head.y()) == (self.snake.food.x(), self.snake.food.y()) {
             self.snake.eat(i32::from(self.unit), self.bounds);
-            self.gamespeed = self.gamespeed + 0.5;
+            self.gamespeed = self.gamespeed + 0.25;
             println!("Tickrate: {} - Gamespeed: {}", tickrate, self.gamespeed);
         }
     }
@@ -313,15 +326,13 @@ impl Engine {
         self.running = false;
     }
 
-    pub fn _start_game() {
-        todo!()
-    }
-
     pub fn start(&mut self){
         // Setting up textures
         let texture_creator = self.canvas.texture_creator();
         let map_texture = texture_creator.load_texture(".\\imgs\\floor.png").unwrap();
         let snake_texture = texture_creator.load_texture(".\\imgs\\snake_map_green.png").unwrap();
+        let mainmenu_texture = texture_creator.load_texture(".\\imgs\\main_menu.png").unwrap();
+        let map = Rect::new(0, 200, self.width as u32, self.height as u32);
 
         // Setting up fonts
         let ttf_context = sdl2::ttf::init().unwrap();
@@ -332,37 +343,87 @@ impl Engine {
         let mut surface: Surface;
         let mut dst: Rect;
 
-        while self.running {
-            self.tick();
-            self.draw_art(&snake_texture, &map_texture);
+        while self.running && self.state == GameState::MainMenu {
+            self.canvas.clear();
 
-            // Create Gamespeed UI at top left
-            self.canvas.set_draw_color(Color::RGB(50, 105, 50));
-            self.canvas.fill_rect(Rect::new(15,self.height as i32-100,self.width as u32-30,90)).unwrap();
-            let mut str = String::from("Game Speed: ");
-            str.push_str(&(self.gamespeed*10.0).to_string());
-            surface = ui_font.render(&str).blended(Color::RGBA(150, 210, 150, 255)).unwrap();
-            let gamespeed_text = texture_creator.create_texture_from_surface(&surface).unwrap();
-            let TextureQuery {width, height, ..} = gamespeed_text.query();
-            dst = Rect::new(390,self.height as i32-67, width, height);
-            self.canvas.copy(&gamespeed_text, None, dst).unwrap();
+            self.canvas.copy(&mainmenu_texture, map, None).unwrap();
 
-            self.canvas.present();
             for event in self.get_events(){
                 match event {
                     Some(GameEventCode::Quit) => {
                         println!("Game Quiting");
                         self.stop();
                     },
+                    Some(GameEventCode::StartGame) => {},
+                    Some(GameEventCode::MainMenu) => {},
                     None => {
                         //println!("Non quit event happening");
                     }
                 }
             }
+            self.canvas.present();
+            std::thread::sleep(Duration::from_millis(33));
+        }
+
+        // starting game loop
+        while self.running && (self.state == GameState::Game || self.state == GameState::GameOver) {
+
+            // checking mouse and keyboard input
+            for event in self.get_events(){
+                match event {
+                    Some(GameEventCode::Quit) => {
+                        println!("Game Quiting");
+                        self.stop();
+                    },
+                    Some(GameEventCode::StartGame) => {},
+                    Some(GameEventCode::MainMenu) => {},
+                    None => {
+                        //println!("Non quit event happening");
+                    }
+                }
+            }
+
+            // ticking game forward
+            self.tick();
+            // drawing textures to canvas
+            self.draw_art(&snake_texture, &map_texture);
+
+            // Creating box for text to go in
+            self.canvas.set_draw_color(Color::RGB(50, 105, 50));
+            self.canvas.fill_rect(Rect::new(15,self.height as i32-100,self.width as u32-30,90)).unwrap();
+
+            // Create Gamespeed UI
+            let mut str = String::from("Game Speed: ");
+            str.push_str(&(self.gamespeed).to_string());
+            surface = ui_font.render(&str).blended(Color::RGBA(150, 210, 150, 255)).unwrap();
+            let gamespeed_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+            let TextureQuery {width, height, ..} = gamespeed_text.query();
+            dst = Rect::new(390,self.height as i32-67, width, height);
+            self.canvas.copy(&gamespeed_text, None, dst).unwrap();
+
+            // Create Score UI
+            let mut str = String::from("Score: ");
+            str.push_str(&(self.snake.body.len()-3).to_string());
+            surface = ui_font.render(&str).blended(Color::RGBA(150, 210, 150, 255)).unwrap();
+            let gamespeed_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+            let TextureQuery {width, height, ..} = gamespeed_text.query();
+            dst = Rect::new(125,self.height as i32-67, width, height);
+            self.canvas.copy(&gamespeed_text, None, dst).unwrap();
+
+            self.canvas.present();
         }
     }
 }
 
+#[derive(PartialEq)]
+pub enum GameState {
+    MainMenu,
+    Game,
+    GameOver,
+    Options,
+}
 pub enum GameEventCode {
+    StartGame,
+    MainMenu,
     Quit,
 }

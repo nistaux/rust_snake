@@ -1,4 +1,4 @@
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
 extern crate sdl2; 
 mod snake;
 mod engine;
@@ -10,7 +10,7 @@ pub fn main() {
 
     let scale: usize = 5;
     let unit: usize = 15;
-    let gamespeed: f64 = 7.50;
+    let gamespeed: f64 = 12.00;
     let width = (scale * 144) as usize;
     let height = (scale * 159) as usize;
     let bounds = (Point::new(30, 225), Point::new((width-30).try_into().unwrap(), 630));
@@ -25,7 +25,6 @@ pub fn main() {
         .unwrap();
     let canvas = window.into_canvas().build().unwrap();
     let event_pump = sdl_context.event_pump().unwrap();
-
     
     let mut engine = Engine::new(width, height, unit.try_into().unwrap(), gamespeed, bounds, canvas, event_pump);
     

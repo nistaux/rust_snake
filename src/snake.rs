@@ -1,5 +1,6 @@
 use rand::Rng;
 use sdl2::rect::Point;
+use crate::engine::GameState;
 
 pub struct Snake {
     pub direction: Direction,
@@ -37,7 +38,7 @@ impl Snake {
         match self.direction {
             Direction::Up => {
                 if point.y() <=  tlbound.y{
-                    Some(GameState::EndGame)
+                    Some(GameState::GameOver)
                 }else{
                     self.body = body.to_owned();
                     self.body.push(Point::new(point.x(), point.y()-unit));
@@ -47,7 +48,7 @@ impl Snake {
             Direction::Down => {
                 let boundary = brbound.y - unit;
                 if point.y() >= boundary {
-                    Some(GameState::EndGame)
+                    Some(GameState::GameOver)
                 }else{
                     self.body = body.to_owned();
                     self.body.push(Point::new(point.x(), point.y()+unit));
@@ -56,7 +57,7 @@ impl Snake {
             },
             Direction::Left => {
                 if point.x() <= tlbound.x {
-                    Some(GameState::EndGame)
+                    Some(GameState::GameOver)
                 }else{
                     self.body = body.to_owned();
                     self.body.push(Point::new(point.x()-unit, point.y()));
@@ -66,13 +67,27 @@ impl Snake {
             Direction::Right => {
                 let boundary = brbound.x - unit;
                 if point.x() >= boundary {
-                    Some(GameState::EndGame)
+                    Some(GameState::GameOver)
                 }else{
                     self.body = body.to_owned();
                     self.body.push(Point::new(point.x()+unit, point.y()));
                     None
                 }
             },
+        }
+    }
+
+    pub fn get_head_direction(&self) -> Direction {
+        let head = self.body[self.body.len()-1];
+        let neck = self.body[self.body.len()-2];
+        if neck.x < head.x {
+            Direction::Right
+        }else if neck.x > head.x {
+            Direction::Left
+        }else if neck.y < head.y {
+            Direction::Down
+        }else {
+            Direction::Up
         }
     }
 
@@ -134,10 +149,4 @@ pub enum PartType {
     DTail,
     RTail,
     LTail,
-}
-
-pub enum GameState {
-    _MainMenu,
-    EndGame,
-    _Snake,
 }
