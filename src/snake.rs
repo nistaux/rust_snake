@@ -32,9 +32,17 @@ impl Snake {
     
     pub fn slither(&mut self, unit: i32, bounds: (Point, Point)) -> Option<GameState> {
         let (_, body) = self.body.split_first().unwrap();
+        let (_, bnohead) = self.body.split_last().unwrap();
         let point = self.body.last().unwrap().to_owned();
 
         let (tlbound, brbound) = bounds;
+
+        for part in bnohead {
+            if part.x == point.x && part.y == point.y {
+                return Some(GameState::GameOver)
+            }
+        }
+
         match self.direction {
             Direction::Up => {
                 if point.y() <=  tlbound.y{
@@ -75,6 +83,7 @@ impl Snake {
                 }
             },
         }
+        
     }
 
     pub fn get_head_direction(&self) -> Direction {

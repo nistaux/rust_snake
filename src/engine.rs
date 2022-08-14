@@ -9,6 +9,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::rect::{Point, Rect};
 use sdl2::image::LoadTexture;
+use sdl2::ttf::Sdl2TtfContext;
 
 use crate::snake::{Snake, Direction, PartType};
 
@@ -18,18 +19,18 @@ pub struct Engine {
     pub height: usize,
     pub running: bool,
     pub unit: u8,
-    pub gamespeed: f64,
+    pub gamespeed: f32,
     bounds: (Point, Point),
     snake: Snake,
     state: GameState,
 
     // SDL Things
     canvas: Canvas<Window>,
-    event_pump: EventPump,    
+    event_pump: EventPump,  
 }
 
 impl Engine {
-    pub fn new(width: usize, height: usize, unit: u8, gamespeed: f64, bounds: (Point, Point), canvas: Canvas<Window>, event_pump: EventPump) -> Engine {
+    pub fn new(width: usize, height: usize, unit: u8, gamespeed: f32, bounds: (Point, Point), canvas: Canvas<Window>, event_pump: EventPump) -> Engine {
         Engine {
             width,
             height,
@@ -298,20 +299,12 @@ impl Engine {
 
     pub fn tick(&mut self) {
         // setting tickrate via gamespeed
-        let tickrate: f64 = 1.00 / self.gamespeed;
-        std::thread::sleep(Duration::from_secs_f64(tickrate));
+        let tickrate: f32 = 1.00 / self.gamespeed;
+        std::thread::sleep(Duration::from_secs_f32(tickrate));
 
         // moving snek if not hitting bounds
         match self.snake.slither(i32::from(self.unit,), self.bounds) {
-            Some(GameState::GameOver) => {
-                //self.stop()
-                match self.snake.direction {
-                    Direction::Up => println!("Hitting Top Edge!"),
-                    Direction::Down => println!("Hitting Bottom Edge!"),
-                    Direction::Left => println!("Hitting Left Edge!"),
-                    Direction::Right => println!("Hitting Right Edge!"),
-                }
-            },
+            Some(GameState::GameOver) =>  self.state = GameState::GameOver,
             _ => {}
         }
         let head = self.snake.body.last().unwrap().to_owned();
@@ -345,118 +338,141 @@ impl Engine {
         let mut surface: Surface;
         let mut dst: Rect;
 
-        while self.running && self.state == GameState::MainMenu {
-            self.canvas.clear();
-
-            self.canvas.copy(&mainmenu_texture, map, None).unwrap();
-
-            //16, 65, 179
-            // Create Title Text
-            let str = String::from("Rust the Snake");
-            surface = title_font.render(&str).blended(Color::RGBA(150, 96, 36, 255)).unwrap();
-            let title_text = texture_creator.create_texture_from_surface(&surface).unwrap();
-            let TextureQuery {width, height, ..} = title_text.query();
-            dst = Rect::new(140,110, width, height);
-            self.canvas.copy(&title_text, None, dst).unwrap();
-
-            // Create Title Text
-            let str = String::from("by Nistaux");
-            surface = option_font.render(&str).blended(Color::RGBA(0, 138, 117, 255)).unwrap();
-            let author_text = texture_creator.create_texture_from_surface(&surface).unwrap();
-            let TextureQuery {width, height, ..} = author_text.query();
-            dst = Rect::new(450,165, width, height);
-            self.canvas.copy(&author_text, None, dst).unwrap();
-
-            // Creating box for text to go in
-            self.canvas.set_draw_color(Color::RGB(230, 230, 230));
-            self.canvas.fill_rect(Rect::new(180,395,357,38)).unwrap();
-
-            // Create start game text (press enter to start)
-            let str = String::from("Press Enter to start!");
-            surface = option_font.render(&str).blended(Color::RGBA(16, 100, 179, 255)).unwrap();
-            let option_text = texture_creator.create_texture_from_surface(&surface).unwrap();
-            let TextureQuery {width, height, ..} = option_text.query();
-            dst = Rect::new(190,400, width, height);
-            self.canvas.copy(&option_text, None, dst).unwrap();
-
-            for event in self.get_events(){
-                match event {
-                    Some(GameEventCode::Quit) => {
-                        println!("Game Quiting");
-                        self.stop();
-                    },
-                    Some(GameEventCode::StartGame) => {},
-                    None => {
-                        //println!("Non quit event happening");
+        while self.running {
+            if self.state == GameState::MainMenu {
+                self.canvas.clear();
+    
+                self.canvas.copy(&mainmenu_texture, map, None).unwrap();
+    
+                //16, 65, 179
+                // Create Title Text
+                let str = String::from("Rust the Snake");
+                surface = title_font.render(&str).blended(Color::RGBA(150, 96, 36, 255)).unwrap();
+                let title_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+                let TextureQuery {width, height, ..} = title_text.query();
+                dst = Rect::new(140,110, width, height);
+                self.canvas.copy(&title_text, None, dst).unwrap();
+    
+                // Create Author Text
+                let str = String::from("by Nistaux");
+                surface = option_font.render(&str).blended(Color::RGBA(0, 138, 117, 255)).unwrap();
+                let author_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+                let TextureQuery {width, height, ..} = author_text.query();
+                dst = Rect::new(450,165, width, height);
+                self.canvas.copy(&author_text, None, dst).unwrap();
+    
+                // Creating box for text to go in
+                self.canvas.set_draw_color(Color::RGB(230, 230, 230));
+                self.canvas.fill_rect(Rect::new(180,395,357,38)).unwrap();
+    
+                // Create start game text (press enter to start)
+                let str = String::from("Press Enter to start!");
+                surface = option_font.render(&str).blended(Color::RGBA(16, 100, 179, 255)).unwrap();
+                let option_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+                let TextureQuery {width, height, ..} = option_text.query();
+                dst = Rect::new(190,400, width, height);
+                self.canvas.copy(&option_text, None, dst).unwrap();
+    
+                for event in self.get_events(){
+                    match event {
+                        Some(GameEventCode::Quit) => {
+                            println!("Game Quiting");
+                            self.stop();
+                            
+                        },
+                        Some(GameEventCode::StartGame) => {},
+                        None => {
+                            //println!("Non quit event happening");
+                        }
                     }
                 }
+                self.canvas.present();
+                std::thread::sleep(Duration::from_millis(33));
             }
-            self.canvas.present();
-            std::thread::sleep(Duration::from_millis(33));
-        }
 
-        // starting game loop
-        while self.running && (self.state == GameState::Game || self.state == GameState::GameOver) {
+            // starting game loop
+            if self.state == GameState::Game || self.state == GameState::GameOver {
 
-            // checking mouse and keyboard input
-            for event in self.get_events(){
-                match event {
-                    Some(GameEventCode::Quit) => {
-                        println!("Game Quiting");
-                        self.stop();
-                    },
-                    Some(GameEventCode::StartGame) => {},
-                    None => {
-                        //println!("Non quit event happening");
+                // checking mouse and keyboard input
+                for event in self.get_events(){
+                    match event {
+                        Some(GameEventCode::Quit) => {
+                            println!("Game Quiting");
+                            self.stop();
+                            
+                        },
+                        Some(GameEventCode::StartGame) => {},
+                        None => {
+                            //println!("Non quit event happening");
+                        }
                     }
                 }
+
+                if self.state == GameState::GameOver {
+                    self.snake = Snake::new(self.unit.try_into().unwrap(), self.bounds);
+                    self.state = GameState::MainMenu;
+                    self.gamespeed = 12.00;
+                    
+                }else {
+                    // ticking game forward
+                    self.tick();
+                    // drawing textures to canvas
+                    self.draw_art(&snake_texture, &map_texture);
+
+                    // Creating box for text to go in
+                    self.canvas.set_draw_color(Color::RGB(50, 105, 50));
+                    self.canvas.fill_rect(Rect::new(15,self.height as i32-100,self.width as u32-30,90)).unwrap();
+
+                    // Create Title Text
+                    let str = String::from("Rust the Snake");
+                    surface = title_font.render(&str).blended(Color::RGBA(150, 96, 36, 255)).unwrap();
+                    let title_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+                    let TextureQuery {width, height, ..} = title_text.query();
+                    dst = Rect::new(140,30, width, height);
+                    self.canvas.copy(&title_text, None, dst).unwrap();
+
+                    // Create Author Text
+                    let str = String::from("by Nistaux");
+                    surface = option_font.render(&str).blended(Color::RGBA(0, 138, 117, 255)).unwrap();
+                    let author_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+                    let TextureQuery {width, height, ..} = author_text.query();
+                    dst = Rect::new(450,75, width, height);
+                    self.canvas.copy(&author_text, None, dst).unwrap();
+
+                    // Create Gamespeed UI
+                    let mut str = String::from("Game Speed: ");
+                    if self.gamespeed.to_string().len() == 4 { 
+                        str.push_str(&(self.gamespeed).to_string()[0..4].to_string()); 
+                    } else if self.gamespeed.to_string().len() >= 5 { 
+                        str.push_str(&(self.gamespeed).to_string()[0..5].to_string());
+                    } else { 
+                        str.push_str(&(self.gamespeed).to_string());
+                    }
+                    surface = ui_font.render(&str).blended(Color::RGBA(150, 210, 150, 255)).unwrap();
+                    let gamespeed_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+                    let TextureQuery {width, height, ..} = gamespeed_text.query();
+                    dst = Rect::new(390,self.height as i32-67, width, height);
+                    self.canvas.copy(&gamespeed_text, None, dst).unwrap();
+
+                    // Create Score UI
+                    let mut str = String::from("Score: ");
+                    str.push_str(&(self.snake.body.len()-3).to_string());
+                    surface = ui_font.render(&str).blended(Color::RGBA(150, 210, 150, 255)).unwrap();
+                    let gamespeed_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+                    let TextureQuery {width, height, ..} = gamespeed_text.query();
+                    dst = Rect::new(125,self.height as i32-67, width, height);
+                    self.canvas.copy(&gamespeed_text, None, dst).unwrap();
+                }
+
+                
+
+                self.canvas.present();
             }
-
-            // ticking game forward
-            self.tick();
-            // drawing textures to canvas
-            self.draw_art(&snake_texture, &map_texture);
-
-            // Creating box for text to go in
-            self.canvas.set_draw_color(Color::RGB(50, 105, 50));
-            self.canvas.fill_rect(Rect::new(15,self.height as i32-100,self.width as u32-30,90)).unwrap();
-
-            // Create Title Text
-            let str = String::from("Rust the Snake");
-            surface = title_font.render(&str).blended(Color::RGBA(150, 96, 36, 255)).unwrap();
-            let title_text = texture_creator.create_texture_from_surface(&surface).unwrap();
-            let TextureQuery {width, height, ..} = title_text.query();
-            dst = Rect::new(140,30, width, height);
-            self.canvas.copy(&title_text, None, dst).unwrap();
-
-            // Create Title Text
-            let str = String::from("by Nistaux");
-            surface = option_font.render(&str).blended(Color::RGBA(0, 138, 117, 255)).unwrap();
-            let author_text = texture_creator.create_texture_from_surface(&surface).unwrap();
-            let TextureQuery {width, height, ..} = author_text.query();
-            dst = Rect::new(450,75, width, height);
-            self.canvas.copy(&author_text, None, dst).unwrap();
-
-            // Create Gamespeed UI
-            let mut str = String::from("Game Speed: ");
-            str.push_str(&(self.gamespeed).to_string());
-            surface = ui_font.render(&str).blended(Color::RGBA(150, 210, 150, 255)).unwrap();
-            let gamespeed_text = texture_creator.create_texture_from_surface(&surface).unwrap();
-            let TextureQuery {width, height, ..} = gamespeed_text.query();
-            dst = Rect::new(390,self.height as i32-67, width, height);
-            self.canvas.copy(&gamespeed_text, None, dst).unwrap();
-
-            // Create Score UI
-            let mut str = String::from("Score: ");
-            str.push_str(&(self.snake.body.len()-3).to_string());
-            surface = ui_font.render(&str).blended(Color::RGBA(150, 210, 150, 255)).unwrap();
-            let gamespeed_text = texture_creator.create_texture_from_surface(&surface).unwrap();
-            let TextureQuery {width, height, ..} = gamespeed_text.query();
-            dst = Rect::new(125,self.height as i32-67, width, height);
-            self.canvas.copy(&gamespeed_text, None, dst).unwrap();
-
-            self.canvas.present();
         }
+
+        
+
+        
     }
 }
 

@@ -10,7 +10,7 @@ pub fn main() {
 
     let scale: usize = 5;
     let unit: usize = 15;
-    let gamespeed: f64 = 12.00;
+    let gamespeed: f32 = 12.00;
     let width = (scale * 144) as usize;
     let height = (scale * 159) as usize;
     let bounds = (Point::new(30, 225), Point::new((width-30).try_into().unwrap(), 630));
