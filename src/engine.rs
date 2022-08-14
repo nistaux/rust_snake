@@ -9,7 +9,6 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::rect::{Point, Rect};
 use sdl2::image::LoadTexture;
-use sdl2::ttf::Sdl2TtfContext;
 
 use crate::snake::{Snake, Direction, PartType};
 
