@@ -51,7 +51,22 @@ impl Engine {
                 // clicks X at top right
                 Event::Quit {..} => events.push(Some(GameEventCode::Quit)),
                 // presses esc
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => events.push(Some(GameEventCode::Quit)),
+                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                    match self.state {
+                        GameState::Game => {
+                            events.push(None);
+                        },
+                        GameState::GameOver => {
+                            self.state = GameState::MainMenu;
+                            events.push(None);
+                        },
+                        GameState::MainMenu => {
+                            self.state = GameState::Game;
+                            events.push(Some(GameEventCode::Quit))
+                        },
+
+                    }
+                },
                 // presses W
                 Event::KeyDown { keycode: Some(Keycode::W), .. } => {
                     if self.snake.get_head_direction() != Direction::Down{
@@ -87,13 +102,20 @@ impl Engine {
                 },
                 // presses Enter
                 Event::KeyDown { keycode: Some(Keycode::Return), .. } => {
-                    if self.state == GameState::MainMenu{
-                        self.state = GameState::Game;
-                        events.push(Some(GameEventCode::StartGame))
-                    }else {
-                        events.push(None);
+                    match self.state {
+                        GameState::Game => {
+                            events.push(None);
+                        },
+                        GameState::GameOver => {
+                            self.state = GameState::Game;
+                            events.push(None);
+                        },
+                        GameState::MainMenu => {
+                            self.state = GameState::Game;
+                            events.push(Some(GameEventCode::StartGame))
+                        },
+
                     }
-                    
                 },
                 _ => events.push(None)
                 
@@ -334,6 +356,8 @@ impl Engine {
         ui_font.set_style(sdl2::ttf::FontStyle::BOLD);
         let mut option_font = ttf_context.load_font(".\\fonts\\lucon.ttf", 27).unwrap();
         option_font.set_style(sdl2::ttf::FontStyle::BOLD);
+        let mut gameover_font = ttf_context.load_font(".\\fonts\\lucon.ttf", 75).unwrap();
+        gameover_font.set_style(sdl2::ttf::FontStyle::UNDERLINE);
         let mut surface: Surface;
         let mut dst: Rect;
 
@@ -408,9 +432,36 @@ impl Engine {
                 }
 
                 if self.state == GameState::GameOver {
+                    // resetting core engine variables
                     self.snake = Snake::new(self.unit.try_into().unwrap(), self.bounds);
-                    self.state = GameState::MainMenu;
                     self.gamespeed = 12.00;
+
+                    // Creating box for text to go in
+                    self.canvas.set_draw_color(Color::RGB(20, 20, 80));
+                    self.canvas.fill_rect(Rect::new(80,135,self.width as u32-160,225)).unwrap();
+
+                    // Create GameOver Text
+                    let str = String::from("Game Over!");
+                    surface = gameover_font.render(&str).blended(Color::RGBA(220, 220, 255, 255)).unwrap();
+                    let gameover_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+                    let TextureQuery {width, height, ..} = gameover_text.query();
+                    dst = Rect::new(136,140, width, height);
+                    self.canvas.copy(&gameover_text, None, dst).unwrap();
+
+                    // Create Option(Main Menu or Try Again) Text
+                    let str = String::from("Press ESC to return to Main Menu");
+                    surface = option_font.render(&str).blended(Color::RGBA(50, 138, 117, 255)).unwrap();
+                    let mainmenu_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+                    let TextureQuery {width, height, ..} = mainmenu_text.query();
+                    dst = Rect::new(100,250, width, height);
+                    self.canvas.copy(&mainmenu_text, None, dst).unwrap();
+
+                    let str = String::from("Press ENTER to try again");
+                    surface = option_font.render(&str).blended(Color::RGBA(50, 138, 117, 255)).unwrap();
+                    let tryagain_text = texture_creator.create_texture_from_surface(&surface).unwrap();
+                    let TextureQuery {width, height, ..} = tryagain_text.query();
+                    dst = Rect::new(160,295, width, height);
+                    self.canvas.copy(&tryagain_text, None, dst).unwrap();                    
                     
                 }else {
                     // ticking game forward
@@ -462,16 +513,9 @@ impl Engine {
                     dst = Rect::new(125,self.height as i32-67, width, height);
                     self.canvas.copy(&gamespeed_text, None, dst).unwrap();
                 }
-
-                
-
                 self.canvas.present();
             }
         }
-
-        
-
-        
     }
 }
 
