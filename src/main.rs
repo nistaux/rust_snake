@@ -1,4 +1,4 @@
-//#![windows_subsystem = "windows"]
+#![windows_subsystem = "windows"]
 extern crate sdl2; 
 mod snake;
 mod engine;

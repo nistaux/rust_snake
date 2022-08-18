@@ -332,7 +332,7 @@ impl Engine {
         if (head.x(), head.y()) == (self.snake.food.x(), self.snake.food.y()) {
             self.snake.eat(i32::from(self.unit), self.bounds);
             self.gamespeed = self.gamespeed + 0.25;
-            println!("Tickrate: {} - Gamespeed: {}", tickrate, self.gamespeed);
+            //println!("Tickrate: {} - Gamespeed: {}", tickrate, self.gamespeed);
         }
     }
 
@@ -399,7 +399,7 @@ impl Engine {
                 for event in self.get_events(){
                     match event {
                         Some(GameEventCode::Quit) => {
-                            println!("Game Quiting");
+                            //println!("Game Quiting");
                             self.stop();
                             
                         },
@@ -420,7 +420,7 @@ impl Engine {
                 for event in self.get_events(){
                     match event {
                         Some(GameEventCode::Quit) => {
-                            println!("Game Quiting");
+                            //println!("Game Quiting");
                             self.stop();
                             
                         },
