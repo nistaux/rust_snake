@@ -96,10 +96,10 @@ impl Engine {
                     events.push(None);
                 },
                 // presses space
-                Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
+                /*Event::KeyDown { keycode: Some(Keycode::Space), .. } => {
                     self.gamespeed = self.gamespeed + 20.0;
                     events.push(None);
-                },
+                },*/
                 // presses Enter
                 Event::KeyDown { keycode: Some(Keycode::Return), .. } => {
                     match self.state {
@@ -156,8 +156,10 @@ impl Engine {
             let end: Point = Point::new(brbound.x, (i*unit as i32).try_into().unwrap());
             self.canvas.draw_line(start, end).unwrap();
         }
-        self.canvas.set_draw_color(Color::RGB(255, 50, 50));
-        self.canvas.fill_rect(Rect::new(self.snake.food.x(), self.snake.food.y(), u32::from(self.unit), u32::from(self.unit))).unwrap();
+
+        // Draw Food (Lil Crab boi)
+        self.canvas.copy(&snake_texture, Rect::new(30, 15, 15, 15), Rect::new(self.snake.food.x, self.snake.food.y, 15, 15)).unwrap();
+
         self.canvas.set_draw_color(Color::RGB(177, 199, 36));
         self.canvas.draw_rect(Rect::new(tlbound.x, tlbound.y, (brbound.x - tlbound.x) as u32, (brbound.y-tlbound.y) as u32)).unwrap();
 
